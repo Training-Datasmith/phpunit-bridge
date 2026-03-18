@@ -37,7 +37,7 @@ trait ExpectDeprecationTraitBeforeV8_4
         }
 
         if (!SymfonyTestsListenerTrait::$previousErrorHandler) {
-            SymfonyTestsListenerTrait::$previousErrorHandler = set_error_handler([SymfonyTestsListenerTrait::class, 'handleError']);
+            SymfonyTestsListenerTrait::$previousErrorHandler = set_error_handler(SymfonyTestsListenerTrait::handleError(...));
         }
 
         SymfonyTestsListenerTrait::$expectedDeprecations[] = $message;

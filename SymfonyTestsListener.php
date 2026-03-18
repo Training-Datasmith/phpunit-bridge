@@ -11,7 +11,7 @@
 
 namespace Symfony\Bridge\PhpUnit;
 
-class_alias('Symfony\Bridge\PhpUnit\Legacy\SymfonyTestsListenerForV7', 'Symfony\Bridge\PhpUnit\SymfonyTestsListener');
+class_alias(\Symfony\Bridge\PhpUnit\Legacy\SymfonyTestsListenerForV7::class, \Symfony\Bridge\PhpUnit\SymfonyTestsListener::class);
 
 if (false) {
     class SymfonyTestsListener

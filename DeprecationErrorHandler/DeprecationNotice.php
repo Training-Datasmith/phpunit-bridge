@@ -16,12 +16,12 @@ namespace Symfony\Bridge\PhpUnit\DeprecationErrorHandler;
  */
 final class DeprecationNotice
 {
-    private $count = 0;
+    private int $count = 0;
 
     /**
      * @var int[]
      */
-    private $countsByCaller = [];
+    private array $countsByCaller = [];
 
     public function addObjectOccurrence($class, $method): void
     {

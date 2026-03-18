@@ -38,11 +38,11 @@ class SymfonyTestsListenerTrait
     public static $expectedDeprecations = [];
     public static $previousErrorHandler;
     private static $gatheredDeprecations = [];
-    private static $globallyEnabled = false;
-    private $state = -1;
-    private $skippedFile = false;
+    private static bool $globallyEnabled = false;
+    private int $state = -1;
+    private string|bool $skippedFile = false;
     private $wasSkipped = [];
-    private $isSkipped = [];
+    private array $isSkipped = [];
     private $runsInSeparateProcess = false;
     private $checkNumAssertions = false;
 
@@ -55,12 +55,12 @@ class SymfonyTestsListenerTrait
 
         if (class_exists(ExcludeList::class)) {
             (new ExcludeList())->getExcludedDirectories();
-            ExcludeList::addDirectory(\dirname((new \ReflectionClass(__CLASS__))->getFileName(), 2));
+            ExcludeList::addDirectory(\dirname((new \ReflectionClass(self::class))->getFileName(), 2));
         } elseif (method_exists(Blacklist::class, 'addDirectory')) {
             (new Blacklist())->getBlacklistedDirectories();
-            Blacklist::addDirectory(\dirname((new \ReflectionClass(__CLASS__))->getFileName(), 2));
+            Blacklist::addDirectory(\dirname((new \ReflectionClass(self::class))->getFileName(), 2));
         } else {
-            Blacklist::$blacklistedClassNames[__CLASS__] = 2;
+            Blacklist::$blacklistedClassNames[self::class] = 2;
         }
 
         $enableDebugClassLoader = class_exists(DebugClassLoader::class);
@@ -95,12 +95,12 @@ class SymfonyTestsListenerTrait
 
     public function __serialize(): array
     {
-        throw new \BadMethodCallException('Cannot serialize '.__CLASS__);
+        throw new \BadMethodCallException('Cannot serialize '.self::class);
     }
 
     public function __unserialize(array $data): void
     {
-        throw new \BadMethodCallException('Cannot unserialize '.__CLASS__);
+        throw new \BadMethodCallException('Cannot unserialize '.self::class);
     }
 
     public function __destruct()
@@ -236,7 +236,7 @@ class SymfonyTestsListenerTrait
             if (isset($annotations['method']['expectedDeprecation']) || $this->checkNumAssertions = method_exists($test, 'expectDeprecation') && (new \ReflectionMethod($test, 'expectDeprecation'))->getFileName() === (new \ReflectionMethod(ExpectDeprecationTrait::class, 'expectDeprecation'))->getFileName()) {
                 if (isset($annotations['method']['expectedDeprecation'])) {
                     self::$expectedDeprecations = $annotations['method']['expectedDeprecation'];
-                    self::$previousErrorHandler = set_error_handler([self::class, 'handleError']);
+                    self::$previousErrorHandler = set_error_handler(self::handleError(...));
                     @trigger_error('Since symfony/phpunit-bridge 5.1: Using "@expectedDeprecation" annotations in tests is deprecated, use the "ExpectDeprecationTrait::expectDeprecation()" method instead.', \E_USER_DEPRECATED);
                 }
 
@@ -257,7 +257,7 @@ class SymfonyTestsListenerTrait
             if ($expectedDeprecations) {
                 self::$expectedDeprecations = array_merge(self::$expectedDeprecations, unserialize($expectedDeprecations));
                 if (!self::$previousErrorHandler) {
-                    self::$previousErrorHandler = set_error_handler([self::class, 'handleError']);
+                    self::$previousErrorHandler = set_error_handler(self::handleError(...));
                 }
             }
         }

@@ -48,7 +48,7 @@ class CommandForV9 extends BaseCommand
             }
 
             foreach ($configuration->listeners() as $registeredListener) {
-                if ('Symfony\Bridge\PhpUnit\SymfonyTestsListener' === ltrim($registeredListener->className(), '\\')) {
+                if (\Symfony\Bridge\PhpUnit\SymfonyTestsListener::class === ltrim((string) $registeredListener->className(), '\\')) {
                     $registeredLocally = true;
                     break;
                 }

@@ -21,7 +21,7 @@ error_reporting(-1);
 global $argv, $argc;
 $argv = $_SERVER['argv'] ?? [];
 $argc = $_SERVER['argc'] ?? 0;
-$getEnvVar = static function ($name, $default = false) use ($argv) {
+$getEnvVar = static function (string $name, $default = false) use ($argv) {
     if (false !== $value = getenv($name)) {
         return $value;
     }
@@ -29,7 +29,7 @@ $getEnvVar = static function ($name, $default = false) use ($argv) {
     static $phpunitConfig = null;
     if (null === $phpunitConfig) {
         $phpunitConfigFilename = null;
-        $getPhpUnitConfig = static function ($probableConfig) use (&$getPhpUnitConfig) {
+        $getPhpUnitConfig = static function (?string $probableConfig) use (&$getPhpUnitConfig) {
             if (!$probableConfig) {
                 return null;
             }
@@ -57,11 +57,11 @@ $getEnvVar = static function ($name, $default = false) use ($argv) {
                 break;
             }
             // short option
-            if (str_starts_with($cliArgument, '-c')) {
+            if (str_starts_with((string) $cliArgument, '-c')) {
                 if ('-c' === $cliArgument && array_key_exists($cliArgumentIndex + 1, $argv)) {
                     $phpunitConfigFilename = $getPhpUnitConfig($argv[$cliArgumentIndex + 1]);
                 } else {
-                    $phpunitConfigFilename = $getPhpUnitConfig(substr($cliArgument, 2));
+                    $phpunitConfigFilename = $getPhpUnitConfig(substr((string) $cliArgument, 2));
                 }
                 break;
             }
@@ -89,7 +89,7 @@ $getEnvVar = static function ($name, $default = false) use ($argv) {
     return $default;
 };
 
-$passthruOrFail = static function ($command) {
+$passthruOrFail = static function ($command): void {
     passthru($command, $status);
 
     if ($status) {
@@ -218,7 +218,7 @@ if (!file_exists("$PHPUNIT_DIR/$PHPUNIT_VERSION_DIR/phpunit") || $configurationH
         'requires' => ['php' => '*'],
     ];
 
-    $stableVersions = array_filter($info['versions'], static fn ($v) => !preg_match('/-dev$|^dev-/', $v));
+    $stableVersions = array_filter($info['versions'], static fn (string $v): bool => !preg_match('/-dev$|^dev-/', $v));
 
     if (!$stableVersions) {
         $passthruOrFail("$COMPOSER create-project --ignore-platform-reqs --no-install --prefer-dist --no-scripts --no-plugins --no-progress -s dev phpunit/phpunit $PHPUNIT_VERSION_DIR \"$PHPUNIT_VERSION.*\"");
@@ -335,7 +335,7 @@ if (filter_var(getenv('SYMFONY_PHPUNIT_DISABLE_RESULT_CACHE'), \FILTER_VALIDATE_
 }
 
 $components = [];
-$cmd = array_map('escapeshellarg', $argv);
+$cmd = array_map(escapeshellarg(...), $argv);
 $exit = 0;
 
 if (isset($argv[1]) && 'symfony' === $argv[1] && !file_exists('symfony') && file_exists('src/Symfony')) {
@@ -350,7 +350,7 @@ if (isset($argv[1]) && is_dir($argv[1]) && !file_exists($argv[1].'/phpunit.xml.d
 
     foreach ($finder as $file => $fileInfo) {
         if ('phpunit.xml.dist' === $file) {
-            $components[] = dirname($fileInfo->getPathname());
+            $components[] = dirname((string) $fileInfo->getPathname());
         }
     }
     if ($components) {

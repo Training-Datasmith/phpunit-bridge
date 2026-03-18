@@ -27,14 +27,14 @@ class SymfonyTestsListenerForV7 implements TestListener
 {
     use TestListenerDefaultImplementation;
 
-    private $trait;
+    private \Symfony\Bridge\PhpUnit\Legacy\SymfonyTestsListenerTrait $trait;
 
     public function __construct(array $mockedNamespaces = [])
     {
         $this->trait = new SymfonyTestsListenerTrait($mockedNamespaces);
     }
 
-    public function globalListenerDisabled()
+    public function globalListenerDisabled(): void
     {
         $this->trait->globalListenerDisabled();
     }

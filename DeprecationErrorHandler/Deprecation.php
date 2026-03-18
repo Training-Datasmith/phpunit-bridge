@@ -35,16 +35,14 @@ class Deprecation
     public const TYPE_INDIRECT = 'type_indirect';
     public const TYPE_UNDETERMINED = 'type_undetermined';
 
-    private $trace = [];
-    private $message;
-    private $languageDeprecation;
+    private array $trace;
     private $originClass;
     private $originMethod;
-    private $triggeringFile;
+    private string $triggeringFile;
     private $triggeringClass;
 
     /** @var string[] Absolute paths to vendor directories */
-    private static $vendors;
+    private static ?array $vendors = null;
 
     /**
      * @var string[] Absolute paths to source or tests of the project, cache
@@ -55,7 +53,7 @@ class Deprecation
 
     private $originalFilesStack;
 
-    public function __construct(string $message, array $trace, string $file, bool $languageDeprecation = false)
+    public function __construct(private string $message, array $trace, string $file, private readonly bool $languageDeprecation = false)
     {
         if (DebugClassLoader::class === ($trace[2]['class'] ?? '')) {
             $this->triggeringClass = $trace[2]['args'][0];
@@ -76,8 +74,6 @@ class Deprecation
         }
 
         $this->trace = $trace;
-        $this->message = $message;
-        $this->languageDeprecation = $languageDeprecation;
 
         $i = \count($trace);
         while (1 < $i && $this->lineShouldBeSkipped($trace[--$i])) {
@@ -99,7 +95,7 @@ class Deprecation
                     $this->getOriginalFilesStack();
                     array_splice($this->originalFilesStack, 0, $j, [$this->triggeringFile]);
 
-                    if (preg_match('/(?|"([^"]++)" that is deprecated|should implement method "(?:static )?([^:]++))/', $message, $m) || (!str_contains($message, '()" will return') && !str_contains($message, 'native return type declaration') && preg_match('/^(?:The|Method) "([^":]++)/', $message, $m))) {
+                    if (preg_match('/(?|"([^"]++)" that is deprecated|should implement method "(?:static )?([^:]++))/', $this->message, $m) || (!str_contains($this->message, '()" will return') && !str_contains($this->message, 'native return type declaration') && preg_match('/^(?:The|Method) "([^":]++)/', $this->message, $m))) {
                         $this->triggeringFile = (new \ReflectionClass($m[1]))->getFileName();
                         array_unshift($this->originalFilesStack, $this->triggeringFile);
                     }
@@ -113,7 +109,7 @@ class Deprecation
             return;
         }
 
-        set_error_handler(static function () {});
+        set_error_handler(static function (): void {});
         try {
             $parsedMsg = unserialize($this->message);
         } finally {
@@ -138,7 +134,7 @@ class Deprecation
         }
 
         if (!isset($line['class'], $trace[$i - 2]['function']) || !str_starts_with($line['class'], SymfonyTestsListenerFor::class)) {
-            $this->originClass = isset($line['object']) ? \get_class($line['object']) : $line['class'];
+            $this->originClass = isset($line['object']) ? $line['object']::class : $line['class'];
             $this->originMethod = $line['function'];
 
             return;
@@ -218,7 +214,7 @@ class Deprecation
         return str_starts_with($method, 'testLegacy')
             || str_starts_with($method, 'provideLegacy')
             || str_starts_with($method, 'getLegacy')
-            || strpos($this->originClass, '\Legacy')
+            || strpos((string) $this->originClass, '\Legacy')
             || \in_array('legacy', $groups($this->originClass, $method), true);
     }
 
@@ -254,7 +250,13 @@ class Deprecation
         $erroringFile = $erroringPackage = null;
 
         foreach ($this->getOriginalFilesStack() as $file) {
-            if ('-' === $file || 'Standard input code' === $file || !realpath($file)) {
+            if ('-' === $file) {
+                continue;
+            }
+            if ('Standard input code' === $file) {
+                continue;
+            }
+            if (!realpath($file)) {
                 continue;
             }
             if (self::PATH_TYPE_SELF === $pathType = $this->getPathType($file)) {
@@ -282,10 +284,12 @@ class Deprecation
         if (null === $this->originalFilesStack) {
             $this->originalFilesStack = [];
             foreach ($this->trace as $frame) {
-                if (!isset($frame['file'], $frame['function']) || (!isset($frame['class']) && \in_array($frame['function'], ['require', 'require_once', 'include', 'include_once'], true))) {
+                if (!isset($frame['file'], $frame['function'])) {
                     continue;
                 }
-
+                if (!isset($frame['class']) && \in_array($frame['function'], ['require', 'require_once', 'include', 'include_once'], true)) {
+                    continue;
+                }
                 $this->originalFilesStack[] = $frame['file'];
             }
         }
@@ -345,7 +349,7 @@ class Deprecation
             }
             foreach ($paths as $path) {
                 foreach (self::$vendors as $vendor) {
-                    if (!str_starts_with($path, $vendor)) {
+                    if (!str_starts_with((string) $path, $vendor)) {
                         self::$internalPaths[] = $path;
                     }
                 }

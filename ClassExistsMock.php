@@ -16,9 +16,9 @@ namespace Symfony\Bridge\PhpUnit;
  */
 class ClassExistsMock
 {
-    private static $classes = [];
+    private static array $classes = [];
 
-    private static $enums = [];
+    private static array $enums = [];
 
     /**
      * Configures the classes to be checked upon existence.
@@ -43,28 +43,28 @@ class ClassExistsMock
 
     public static function class_exists($name, $autoload = true): bool
     {
-        $name = ltrim($name, '\\');
+        $name = ltrim((string) $name, '\\');
 
         return isset(self::$classes[$name]) ? (bool) self::$classes[$name] : \class_exists($name, $autoload);
     }
 
     public static function interface_exists($name, $autoload = true): bool
     {
-        $name = ltrim($name, '\\');
+        $name = ltrim((string) $name, '\\');
 
         return isset(self::$classes[$name]) ? (bool) self::$classes[$name] : \interface_exists($name, $autoload);
     }
 
     public static function trait_exists($name, $autoload = true): bool
     {
-        $name = ltrim($name, '\\');
+        $name = ltrim((string) $name, '\\');
 
         return isset(self::$classes[$name]) ? (bool) self::$classes[$name] : \trait_exists($name, $autoload);
     }
 
     public static function enum_exists($name, $autoload = true): bool
     {
-        $name = ltrim($name, '\\');
+        $name = ltrim((string) $name, '\\');
 
         return isset(self::$enums[$name]) ? (bool) self::$enums[$name] : \enum_exists($name, $autoload);
     }

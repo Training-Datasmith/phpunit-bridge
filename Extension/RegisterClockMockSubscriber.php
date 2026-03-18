@@ -25,7 +25,7 @@ use Symfony\Bridge\PhpUnit\Metadata\AttributeReader;
 class RegisterClockMockSubscriber implements LoadedSubscriber
 {
     public function __construct(
-        private AttributeReader $reader,
+        private readonly AttributeReader $reader,
     ) {
     }
 

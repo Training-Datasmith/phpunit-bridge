@@ -24,9 +24,8 @@ class CoverageListener implements TestListener
     use TestListenerDefaultImplementation;
 
     private $sutFqcnResolver;
-    private $warningOnSutNotFound;
 
-    public function __construct(?callable $sutFqcnResolver = null, bool $warningOnSutNotFound = false)
+    public function __construct(?callable $sutFqcnResolver = null, private bool $warningOnSutNotFound = false)
     {
         $this->sutFqcnResolver = $sutFqcnResolver ?? static function (Test $test): ?string {
             $class = $test::class;
@@ -36,8 +35,6 @@ class CoverageListener implements TestListener
 
             return class_exists($sutFqcn) ? $sutFqcn : null;
         };
-
-        $this->warningOnSutNotFound = $warningOnSutNotFound;
     }
 
     public function startTest(Test $test): void
@@ -104,7 +101,7 @@ class CoverageListener implements TestListener
         $symbolAnnotations = new \ReflectionProperty($docBlock, 'symbolAnnotations');
 
         // Exclude internal classes; PHPUnit 9.1+ is picky about tests covering, say, a \RuntimeException
-        $covers = array_filter($covers, static function (string $class) {
+        $covers = array_filter($covers, static function (string $class): bool {
             $reflector = new \ReflectionClass($class);
 
             return $reflector->isUserDefined();

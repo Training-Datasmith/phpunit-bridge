@@ -19,47 +19,25 @@ class Configuration
     /**
      * @var int[]
      */
-    private $thresholds;
+    private ?array $thresholds = null;
 
-    /**
-     * @var string
-     */
-    private $regex;
-
-    /**
-     * @var bool
-     */
-    private $enabled = true;
+    private bool $enabled = true;
 
     /**
      * @var bool[]
      */
-    private $verboseOutput;
+    private array $verboseOutput;
 
     /**
      * @var string[]
      */
-    private $ignoreDeprecationPatterns = [];
+    private array $ignoreDeprecationPatterns = [];
 
-    /**
-     * @var bool
-     */
-    private $generateBaseline = false;
+    private readonly bool $generateBaseline;
 
-    /**
-     * @var string
-     */
-    private $baselineFile = '';
+    private readonly string $baselineFile;
 
-    /**
-     * @var array
-     */
-    private $baselineDeprecations = [];
-
-    /**
-     * @var string|null
-     */
-    private $logFile;
+    private array $baselineDeprecations = [];
 
     /**
      * @param int[]       $thresholds       A hash associating groups to thresholds
@@ -70,7 +48,7 @@ class Configuration
      * @param string      $baselineFile     The path to the baseline file
      * @param string|null $logFile          The path to the log file
      */
-    private function __construct(array $thresholds = [], string $regex = '', array $verboseOutput = [], string $ignoreFile = '', bool $generateBaseline = false, string $baselineFile = '', ?string $logFile = null)
+    private function __construct(array $thresholds = [], private readonly string $regex = '', array $verboseOutput = [], string $ignoreFile = '', bool $generateBaseline = false, string $baselineFile = '', private readonly ?string $logFile = null)
     {
         $groups = ['total', 'indirect', 'direct', 'self'];
 
@@ -99,7 +77,6 @@ class Configuration
                 $this->thresholds[$group] = $this->thresholds['total'] ?? 999999;
             }
         }
-        $this->regex = $regex;
 
         $this->verboseOutput = [
             'unsilenced' => true,
@@ -120,11 +97,11 @@ class Configuration
             if (!is_file($ignoreFile)) {
                 throw new \InvalidArgumentException(\sprintf('The ignoreFile "%s" does not exist.', $ignoreFile));
             }
-            set_error_handler(static function ($t, $m) use ($ignoreFile, &$line) {
+            set_error_handler(static function ($t, $m) use ($ignoreFile, &$line): void {
                 throw new \RuntimeException(\sprintf('Invalid pattern found in "%s" on line "%d"', $ignoreFile, 1 + $line).substr($m, 12));
             });
             try {
-                foreach (file($ignoreFile) as $line => $pattern) {
+                foreach (file($ignoreFile) as $pattern) {
                     if ('#' !== (trim($pattern)[0] ?? '#')) {
                         preg_match($pattern, '');
                         $this->ignoreDeprecationPatterns[] = $pattern;
@@ -150,8 +127,6 @@ class Configuration
                 throw new \InvalidArgumentException(\sprintf('The baselineFile "%s" does not exist.', $this->baselineFile));
             }
         }
-
-        $this->logFile = $logFile;
     }
 
     public function isEnabled(): bool
