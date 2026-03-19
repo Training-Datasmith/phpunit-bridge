@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Symfony package.
  *
@@ -66,7 +68,7 @@ class SymfonyExtension implements Extension
 
         $facade->registerSubscriber(new RegisterClockMockSubscriber($reader));
         $facade->registerSubscriber(new EnableClockMockSubscriber($reader));
-        $facade->registerSubscriber(new class($reader) implements ErroredSubscriber {
+        $facade->registerSubscriber(new class ($reader) implements ErroredSubscriber {
             public function __construct(private readonly AttributeReader $reader)
             {
             }
@@ -77,7 +79,7 @@ class SymfonyExtension implements Extension
                 SymfonyExtension::disableDnsMock($event->test(), $this->reader);
             }
         });
-        $facade->registerSubscriber(new class($reader) implements FinishedSubscriber {
+        $facade->registerSubscriber(new class ($reader) implements FinishedSubscriber {
             public function __construct(private readonly AttributeReader $reader)
             {
             }
@@ -88,7 +90,7 @@ class SymfonyExtension implements Extension
                 SymfonyExtension::disableDnsMock($event->test(), $this->reader);
             }
         });
-        $facade->registerSubscriber(new class($reader) implements SkippedSubscriber {
+        $facade->registerSubscriber(new class ($reader) implements SkippedSubscriber {
             public function __construct(private readonly AttributeReader $reader)
             {
             }
@@ -101,7 +103,7 @@ class SymfonyExtension implements Extension
         });
 
         if (interface_exists(BeforeTestMethodErroredSubscriber::class)) {
-            $facade->registerSubscriber(new class($reader) implements BeforeTestMethodErroredSubscriber {
+            $facade->registerSubscriber(new class ($reader) implements BeforeTestMethodErroredSubscriber {
                 public function __construct(private readonly AttributeReader $reader)
                 {
                 }

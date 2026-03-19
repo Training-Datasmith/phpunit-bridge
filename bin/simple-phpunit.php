@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the Symfony package.
  *
@@ -281,7 +283,9 @@ if (!file_exists("$PHPUNIT_DIR/$PHPUNIT_VERSION_DIR/phpunit") || $configurationH
         $alteredCode = preg_replace('/abstract class Assert[^\{]+\{/', '$0 '.\PHP_EOL."    use \Symfony\Bridge\PhpUnit\Legacy\PolyfillAssertTrait;", $alteredCode, 1);
         file_put_contents($alteredFile, $alteredCode);
 
-        file_put_contents('phpunit', <<<'EOPHP'
+        file_put_contents(
+            'phpunit',
+            <<<'EOPHP'
             <?php
 
             define('PHPUNIT_COMPOSER_INSTALL', __DIR__.'/vendor/autoload.php');
