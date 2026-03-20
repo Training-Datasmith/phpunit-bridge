@@ -21,6 +21,18 @@ class ClockMock
 {
     private static string|float|null $now = null;
 
+    /**
+     * Enables, disables, or queries the clock mock state.
+     *
+     * When called with no argument, returns whether the clock mock is currently active.
+     * When called with true, freezes time at the current microtime value.
+     * When called with false, disables the mock and restores real time functions.
+     * When called with a numeric value, sets the frozen time to that timestamp.
+     *
+     * @param bool|float|int|null $enable True/false to enable/disable, a numeric timestamp to set a specific time, null to query
+     *
+     * @return bool|null Whether the clock mock is active (only when called with null), otherwise null
+     */
     public static function withClockMock($enable = null): ?bool
     {
         if (null === $enable) {
@@ -32,6 +44,14 @@ class ClockMock
         return null;
     }
 
+    /**
+     * Returns the current Unix timestamp, honoring the clock mock if active.
+     *
+     * When the mock is active, returns the frozen timestamp (truncated to int).
+     * When inactive, delegates to the real time() function.
+     *
+     * @return int The current (possibly mocked) Unix timestamp
+     */
     public static function time(): int
     {
         if (null === self::$now) {
@@ -41,6 +61,16 @@ class ClockMock
         return (int) self::$now;
     }
 
+    /**
+     * Sleeps for the given number of seconds, advancing the mocked clock if active.
+     *
+     * When the mock is active, advances the frozen timestamp by `$s` seconds instead
+     * of pausing execution. When inactive, delegates to the real sleep() function.
+     *
+     * @param int|float $s Number of seconds to sleep
+     *
+     * @return int 0 on success (or the real sleep() return value when mock is inactive)
+     */
     public static function sleep($s): int
     {
         if (null === self::$now) {
@@ -120,6 +150,16 @@ class ClockMock
         return \strtotime($datetime, $timestamp);
     }
 
+    /**
+     * Registers the clock mock for all namespaces of the given test class.
+     *
+     * Uses `eval()` to define namespace-scoped override functions (time(), microtime(),
+     * sleep(), usleep(), date(), gmdate(), hrtime(), strtotime()) that delegate to this
+     * class's static methods. The namespace is derived from the given class name, including
+     * its `Tests\` sub-namespace if present.
+     *
+     * @param class-string $class The fully qualified test class name whose namespace(s) to mock
+     */
     public static function register($class): void
     {
         $self = static::class;
